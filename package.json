@@ -1,0 +1,17 @@
+{
+  "name": "@runvnc/node-red-flowgen",
+  "version": "1.0.0",
+  "description": "",
+  "main": "flowgen.js",
+  "node-red": {
+    "nodes": {
+      "custom-sidebar": "custom-sidebar.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.16.1",
+    "dotenv": "^16.4.5",
+    "readline-promises": "^1.3.1"
+  }
+}
