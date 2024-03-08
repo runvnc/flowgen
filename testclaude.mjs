@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import 'dotenv/config'
 import readline from 'node:readline/promises'
+import fs from 'fs/promises'
 
 import { stdin, stdout } from 'node:process'
 const rl = readline.createInterface({ input: stdin, output:stdout })
@@ -89,9 +90,9 @@ print(text.upper())
 ]
 
 const commands = {
-  add: (messages, ...args) => {
-    let text = await fs.readFile(args[1])
-    const msg = `Contents of file [${args[1]}] for reference (no action needed at this time): \n\n${text}`
+  add: async (messages, filename) => {
+    let text = await fs.readFile(filename)
+    const msg = `Contents of file [${filename}] for reference (no action needed at this time): \n\n${text}`
     messages.push({role: 'user', content: msg})
     return await promptClaude(messages, system)
   }
@@ -101,12 +102,12 @@ async function processInput(text, messages) {
   let lines = text.split('\n')
   for (let line of lines) {
     if (line.startsWith('/')) {
-      foundCommand = true
       let parts = line.substr(1).split(' ')
       const cmd = parts[0]
       parts.shift()
       const args = parts
-      return commands[cmd](messages, ...args)      
+      console.log({cmd, args})
+      return await commands[cmd](messages, ...args)      
     }
   }
 
