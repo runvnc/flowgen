@@ -3,14 +3,14 @@ module.exports = function(RED) {
     RED.nodes.createNode(this, config);
   }
 
-  RED.nodes.registerType("flowgen", CustomSidebarNode);
+  RED.nodes.registerType("flowgen", FlowGenNode);
 
-  RED.httpAdmin.get("/custom-sidebar", function(req, res) {
+  RED.httpAdmin.get("/flowgen", function(req, res) {
     res.send(`
       <script>
         RED.sidebar.addTab({
-          id: "custom-sidebar",
-          label: "Custom Sidebar",
+          id: "flowgen",
+          label: "FlowGen",
           icon: "fa fa-cog",
           content: '<button id="add-debug-node">Add Debug Node</button>'
         });
