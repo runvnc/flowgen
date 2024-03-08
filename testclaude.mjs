@@ -11,7 +11,7 @@ const client = new Anthropic({
 });
 
 
-async function next(messages, system) {
+async function promptClaude(messages, system) {
   let result = ''
   const stream = await client.messages.create({ 
       messages,
@@ -73,7 +73,7 @@ You output ONLY:
 - never use placeholders or TODOs
 `
 
-const messages = [{
+const messages = [
   { role: 'user', content: 'Please write a program to add 2+2 in python' },
   { role: 'assistant', content: `
 print(f"2 + 2 = {2+2}")
@@ -88,13 +88,43 @@ print(text.upper())
 ` }
 ]
 
+const commands = {
+  add: (messages, ...args) => {
+    let text = await fs.readFile(args[1])
+    const msg = `Contents of file [${args[1]}] for reference (no action needed at this time): \n\n${text}`
+    messages.push({role: 'user', content: msg})
+    return await promptClaude(messages, system)
+  }
+}
+
+async function processInput(text, messages) {
+  let lines = text.split('\n')
+  for (let line of lines) {
+    if (line.startsWith('/')) {
+      foundCommand = true
+      let parts = line.substr(1).split(' ')
+      const cmd = parts[0]
+      parts.shift()
+      const args = parts
+      return commands[cmd](messages, ...args)      
+    }
+  }
+
+  messages.push({ role: 'user', content: text })
+  return await promptClaude(messages, system)
+
+}
+
 async function loop() {
   while (true) {
     const input = await rl.question('> ')
     console.log()
     if (input.includes('exit') || input.includes('bye')) process.exit(0)
-   
-    messages.push({ role: 'user', content: input })
+    await processInput(input, messages)
+    console.log('-----------------------------------------------------------------------------')
+    console.log({messages})
+
+    console.log('-----------------------------------------------------------------------------')
     const response = await next(messages, system)
     console.log()
     messages.push({ role: 'assistant', content: response })
@@ -102,3 +132,4 @@ async function loop() {
 }
 
 loop()
+
