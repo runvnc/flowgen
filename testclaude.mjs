@@ -2,8 +2,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import 'dotenv/config'
 import readline from 'node:readline/promises'
 
-import { stdin: input, stdout: output } from 'node:process'
-const rl = readline.createInterface({ input, output })
+import { stdin, stdout } from 'node:process'
+const rl = readline.createInterface({ input: stdin, output:stdout })
 
 
 const client = new Anthropic({
