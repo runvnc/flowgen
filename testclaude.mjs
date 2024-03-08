@@ -121,14 +121,14 @@ async function loop() {
     const input = await rl.question('> ')
     console.log()
     if (input.includes('exit') || input.includes('bye')) process.exit(0)
-    await processInput(input, messages)
+    let response = await processInput(input, messages)
+    messages.push({ role: 'assistant', content: response })
+
     console.log('-----------------------------------------------------------------------------')
     console.log({messages})
 
     console.log('-----------------------------------------------------------------------------')
-    const response = await next(messages, system)
     console.log()
-    messages.push({ role: 'assistant', content: response })
   }
 }
 
