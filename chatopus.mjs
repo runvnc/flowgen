@@ -92,7 +92,7 @@ print(text.upper())
 const commands = {
   add: async (messages, filename) => {
     let text = await fs.readFile(filename)
-    const msg = `Contents of file [${filename}] for reference (no action needed at this time): \n\n${text}`
+    const msg = `Contents of file [${filename}] for reference (no action or commentary needed at this time): \n\n${text}`
     messages.push({role: 'user', content: msg})
     return await promptClaude(messages, system)
   }
@@ -106,7 +106,6 @@ async function processInput(text, messages) {
       const cmd = parts[0]
       parts.shift()
       const args = parts
-      console.log({cmd, args})
       return await commands[cmd](messages, ...args)      
     }
   }
@@ -123,11 +122,6 @@ async function loop() {
     if (input.includes('exit') || input.includes('bye')) process.exit(0)
     let response = await processInput(input, messages)
     messages.push({ role: 'assistant', content: response })
-
-    console.log('-----------------------------------------------------------------------------')
-    console.log({messages})
-
-    console.log('-----------------------------------------------------------------------------')
     console.log()
   }
 }
