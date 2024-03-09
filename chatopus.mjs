@@ -126,7 +126,6 @@ async function loop() {
     const input = await rl.question(YELLOW + '> ')
     console.log(RESET)
     if (input.includes('exit') || input.includes('bye')) process.exit(0)
-    console.log()
     let response = await processInput(input, messages)
     messages.push({ role: 'assistant', content: response })
     console.log()
