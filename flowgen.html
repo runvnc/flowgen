@@ -1,50 +1,79 @@
-<script type="text/javascript">
-(function() {
-    RED.plugins.registerPlugin("flowgen", {
-        onadd: function() {
-
-
-            var content = $("<div>").css({"position":"relative","height":"100%"});
-            content.className = "red-ui-flowgen"
-
-            $("<div>My Example Sidebar</div>").appendTo(content);
-            var addButton = $("<button>Add Debug Node</button>").css({"margin":"10px"}).appendTo(content);
-            var fetchFlowsButton = $("<button>Fetch Flows</button>").css({"margin":"10px"}).appendTo(content);
-            var flowsDisplay = $("<pre>").css({"overflow-y": "scroll", "height": "300px", "background-color": "#f5f5f5", "padding": "10px"}).appendTo(content);
-            var fetchCurrentFlowButton = $("<button>Fetch Current Flow</button>").css({"margin":"10px"}).appendTo(content);
-            var currentFlowDisplay = $("<pre>").css({"overflow-y": "scroll", "height": "300px", "background-color": "#f5f5f5", "padding": "10px"}).appendTo(content);
-            addButton.click(function() {
-                console.log('add')
-                RED.view.redraw();
-            });
-            fetchFlowsButton.click(function() {
-                $.get("/flows", function(data) {
-                    flowsDisplay.text(JSON.stringify(data, null, 2));
-                });
-            });
-            fetchCurrentFlowButton.click(function() {
-                var currentFlowId = RED.workspaces.active();
-                $.get("/flow/" + currentFlowId, function(data) {
-                    currentFlowDisplay.text(JSON.stringify(data, null, 2));
-                });
-            });
-
-
-            RED.actions.add("core:show-example-sidebar-tab",function() {
-                RED.sidebar.show("flowgen")
-            });
-            RED.sidebar.addTab({
-                id: "flowgen",
-                name: "Example Sidebar", // long name for the menu
-                label: "Example", // short name for the tab
-                iconClass: "fa fa-birthday-cake", //pick from https://fontawesome.com/v4.7.0/icons/
-                content: content,
-                action: "core:show-example-sidebar-tab"
-            });
-        }
-    })
-})();
+<script type="text/x-red" data-template-name="my-custom-node">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
 </script>
-            // To determine the ID of the current flow being displayed in the editor
-            var currentFlowId = RED.workspaces.active();
-            console.log("Current Flow ID: ", currentFlowId);
+
+<script type="text/x-red" data-help-name="my-custom-node">
+  <p>Custom node with sidebar to export nodes to JSON and create a test flow.</p>
+</script>
+
+<script type="text/javascript">
+  RED.sidebar.addTab({
+    id: "my-custom-node-sidebar",
+    label: "My Custom Node",
+    name: "my-custom-node",
+    content: `
+      <div>
+        <button id="export-button">Export Nodes to JSON</button>
+        <pre id="exported-json"></pre>
+        <button id="create-test-flow">Create Test Flow</button>
+      </div>
+    `
+  });
+
+  // Add event listener to the export button
+  $('#export-button').on('click', function() {
+    var nodes = RED.nodes.getNodeList();
+    var json = JSON.stringify(nodes, null, 2);
+    $('#exported-json').text(json);
+  });
+
+  // Add event listener to the create test flow button
+  $('#create-test-flow').on('click', function() {
+    // Create a trigger node
+    var triggerNode = {
+      id: RED.nodes.id(),
+      type: "inject",
+      name: "Test Trigger",
+      topic: "",
+      payload: "",
+      payloadType: "date",
+      repeat: "",
+      crontab: "",
+      once: false,
+      onceDelay: 0.1,
+      x: 100,
+      y: 100,
+      wires: [[]]
+    };
+
+    // Create a debug node
+    var debugNode = {
+      id: RED.nodes.id(),
+      type: "debug",
+      name: "Test Debug",
+      active: true,
+      tosidebar: true,
+      console: false,
+      tostatus: false,
+      complete: "false",
+      targetType: "full",
+      x: 300,
+      y: 100,
+      wires: []
+    };
+
+    // Wire the trigger node to the debug node
+    triggerNode.wires[0].push(debugNode.id);
+
+    // Add the nodes to the current flow
+    RED.nodes.add(triggerNode);
+    RED.nodes.add(debugNode);
+
+    // Deploy the changes
+    RED.nodes.dirty(true);
+    RED.view.redraw();
+  });
+</script>

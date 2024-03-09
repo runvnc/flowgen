@@ -4,13 +4,19 @@ import readline from 'node:readline/promises'
 import fs from 'fs/promises'
 
 import { stdin, stdout } from 'node:process'
-const rl = readline.createInterface({ input: stdin, output:stdout })
+const rl = readline.createInterface({ 
+  input: stdin,
+  output:stdout,
+  terminal: true
+})
 
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_KEY
 });
 
+const YELLOW = '\x1b[33m';
+const RESET = '\x1b[0m';
 
 async function promptClaude(messages, system) {
   let result = ''
@@ -117,14 +123,15 @@ async function processInput(text, messages) {
 
 async function loop() {
   while (true) {
-    const input = await rl.question('> ')
-    console.log()
+    const input = await rl.question(YELLOW + '> ')
+    console.log(RESET)
     if (input.includes('exit') || input.includes('bye')) process.exit(0)
+    console.log()
     let response = await processInput(input, messages)
     messages.push({ role: 'assistant', content: response })
+    console.log()
     console.log()
   }
 }
 
 loop()
-
