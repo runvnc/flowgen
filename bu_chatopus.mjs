@@ -2,7 +2,6 @@ import Anthropic from '@anthropic-ai/sdk';
 import 'dotenv/config'
 import readline from 'node:readline/promises'
 import fs from 'fs/promises'
-import path from 'path'
 
 import { stdin, stdout } from 'node:process'
 const rl = readline.createInterface({ 
@@ -75,26 +74,28 @@ When requested to write or modify code:
 
 - you will sometimes use comments for planning
 
-- otherwise output ONLY the code (with filename if writing file), without ANY additional commentary. 
+- otherwise output ONLY the code without ANY additional commentary. 
 
-For your output:
+You output ONLY:
 
-- IMPORTANT: assume code should be written to a file unless specified otherwise
-
-- IMPORTANT: if you want the code to be written to a file, include a markdown code block with a filename and code comment at the top of the block, like this:
-
-\`\`\`
-// filename: example.js
-console.log("This code will be written to example.js");
-\`\`\`
-
-- unless otherwise stated, it must be the complete FULL new source with ONLY required changes
+- the complete FULL new source with ONLY required changes and
 
 - never use placeholders or TODOs
-
 `
 
 const messages = [
+  { role: 'user', content: 'Please write a program to add 2+2 in python' },
+  { role: 'assistant', content: `
+print(f"2 + 2 = {2+2}")
+` },
+  { role: 'user', content: `Please modify the following program to output uppercase:   
+text = "hello world"
+print(text.lower())
+` },
+  { role: 'assistant', content: `
+text = "hello world"
+print(text.upper())
+` }
 ]
 
 const commands = {
@@ -106,33 +107,6 @@ const commands = {
   }
 }
 
-async function processCodeBlocks(response) {
-  const codeBlockRegex = /\`\`\`(?:\w+)?\n\/\/ filename: ([\w\-./]+)\n([\s\S]*?)\`\`\`/g;
-  let match;
-  while ((match = codeBlockRegex.exec(response)) !== null) {
-    const filename = match[1];
-    const code = match[2];
-    await createBackup(filename);
-    await fs.writeFile(filename, code);
-    console.log(`File ${filename} has been created or updated.`);
-  }
-}
-
-async function createBackup(filename) {
-  const backupDir = '.backup';
-  const backupFilename = `${filename}.${Date.now()}.bak`;
-  const backupPath = path.join(backupDir, backupFilename);
-  
-  try {
-    await fs.mkdir(backupDir, { recursive: true });
-    await fs.copyFile(filename, backupPath);
-  } catch (err) {
-    if (err.code !== 'ENOENT') {
-      console.error(`Error creating backup for ${filename}:`, err);
-    }
-  }
-}
-
 async function processInput(text, messages) {
   let lines = text.split('\n')
   for (let line of lines) {
@@ -141,17 +115,12 @@ async function processInput(text, messages) {
       const cmd = parts[0]
       parts.shift()
       const args = parts
-      const response = await commands[cmd](messages, ...args)
-      messages.push({ role: 'assistant', content: response });
-      return response
+      return await commands[cmd](messages, ...args)      
     }
   }
 
-  messages.push({ role: 'user', content: text });
-  const response = await promptClaude(messages, system);
-  await processCodeBlocks(response);
-  messages.push({ role: 'assistant', content: response });
-  return response;
+  messages.push({ role: 'user', content: text })
+  return await promptClaude(messages, system)
 }
 
 async function loop() {
@@ -160,10 +129,10 @@ async function loop() {
     console.log(RESET)
     if (input.includes('exit') || input.includes('bye')) process.exit(0)
     let response = await processInput(input, messages)
+    messages.push({ role: 'assistant', content: response })
     console.log()
     console.log()
   }
 }
 
 loop()
-
