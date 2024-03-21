@@ -16,7 +16,8 @@ const client = new Anthropic({
 });
 
 const YELLOW = '\x1b[33m';
-const RESET = '\x1b[0m';
+const GREEN =  '\x1b[32m';
+const RESET =  '\x1b[0m';
 
 async function promptClaude(messages, system) {
   let result = ''
@@ -24,6 +25,8 @@ async function promptClaude(messages, system) {
       messages,
       system,
       model: 'claude-3-opus-20240229',
+      //model: 'claude-3-haiku-20240307',
+      //model: 'claude-3-sonnet-20240229',
       temperature: 0,
       max_tokens: 4000,
       stream: true
@@ -80,6 +83,8 @@ You output ONLY:
 - never use placeholders or TODOs
 `
 
+const system2 = "You are an advanced teaching agent helping a young student. Reply in a conversational manner"
+
 const messages = [
   { role: 'user', content: 'Please write a program to add 2+2 in python' },
   { role: 'assistant', content: `
@@ -118,12 +123,11 @@ async function processInput(text, messages) {
 
   messages.push({ role: 'user', content: text })
   return await promptClaude(messages, system)
-
 }
 
 async function loop() {
   while (true) {
-    const input = await rl.question(YELLOW + '> ')
+    const input = await rl.question(GREEN + '> ' + YELLOW)
     console.log(RESET)
     if (input.includes('exit') || input.includes('bye')) process.exit(0)
     let response = await processInput(input, messages)
